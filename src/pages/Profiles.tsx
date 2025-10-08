@@ -86,41 +86,33 @@ const Profiles = () => {
           <CardDescription>Здесь вы можете управлять вашими профилями WhatsApp</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {profiles.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Профили не найдены</p>
-              <p className="text-sm">Создайте новый профиль для начала работы</p>
-            </div>
-          ) : (
-            profiles.map((profile) => (
-              <Card key={profile.name} className="border-border bg-secondary/50">
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Users className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{profile.name}</h3>
-                      <p className="text-sm text-muted-foreground">{profile.phone}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Отправлено сообщений: {profile.messages_sent}
-                      </p>
-                    </div>
+          {profiles.map((profile) => (
+            <Card key={profile.name} className="border-border bg-secondary/50">
+              <CardContent className="flex items-center justify-between p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Users className="h-6 w-6 text-primary" />
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleProfileSettings(profile.name)}
-                    disabled={loading}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Настроить
-                  </Button>
-                </CardContent>
-              </Card>
-            ))
-          )}
+                  <div>
+                    <h3 className="font-semibold">{profile.name}</h3>
+                    <p className="text-sm text-muted-foreground">{profile.phone}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Отправлено сообщений: {profile.messages_sent}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleProfileSettings(profile.name)}
+                  disabled={loading}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Настроить
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </CardContent>
       </Card>
 

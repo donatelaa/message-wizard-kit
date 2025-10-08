@@ -3,19 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Send as SendIcon, Image as ImageIcon, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api, Profile } from "@/lib/api";
 
 const Send = () => {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [message, setMessage] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const [audio, setAudio] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
 
@@ -36,29 +36,11 @@ const Send = () => {
     }
   };
 
-  const handleSend = async () => {
-    if (!selectedProfile) {
+  const handleSendMessage = async () => {
+    if (!selectedProfile || !phoneNumber || (!message && !imageFile && !audioFile)) {
       toast({
         title: "Ошибка",
-        description: "Выберите профиль",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!phone) {
-      toast({
-        title: "Ошибка",
-        description: "Введите номер телефона",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!message && !image && !audio) {
-      toast({
-        title: "Ошибка",
-        description: "Введите сообщение или прикрепите файл",
+        description: "Заполните все обязательные поля",
         variant: "destructive",
       });
       return;
@@ -67,17 +49,17 @@ const Send = () => {
     setIsSending(true);
 
     try {
-      const result = await api.sendMessage(selectedProfile, phone, message, image, audio);
+      const result = await api.sendMessage(selectedProfile, phoneNumber, message, imageFile, audioFile);
 
       if (result.success) {
         toast({
           title: "Сообщение отправлено!",
-          description: `Сообщение успешно отправлено на номер ${phone}`,
+          description: `Сообщение отправлено на номер ${phoneNumber}`,
         });
-        setPhone("");
+        setPhoneNumber("");
         setMessage("");
-        setImage(null);
-        setAudio(null);
+        setImageFile(null);
+        setAudioFile(null);
       } else {
         toast({
           title: "Ошибка отправки",
@@ -101,97 +83,112 @@ const Send = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <SendIcon className="h-5 w-5 text-primary" />
-          Отправить сообщение
+          Выберите профиль
         </CardTitle>
-        <CardDescription>Отправьте сообщение одному получателю</CardDescription>
+        <CardDescription>Выберите профиль для отправки сообщений</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="profile">Профиль</Label>
+          <Label>Профиль</Label>
           <Select value={selectedProfile} onValueChange={setSelectedProfile}>
-            <SelectTrigger id="profile" className="bg-secondary border-border">
+            <SelectTrigger>
               <SelectValue placeholder="Выберите профиль" />
             </SelectTrigger>
             <SelectContent>
               {profiles.map((profile) => (
                 <SelectItem key={profile.name} value={profile.name}>
-                  {profile.name} ({profile.phone})
+                  {profile.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="phone">Номер телефона</Label>
-          <Input
-            id="phone"
-            placeholder="+79991234567"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="bg-secondary border-border"
-          />
-        </div>
+        {selectedProfile && (
+          <>
+            <div className="space-y-2">
+              <Label>Номер телефона</Label>
+              <Input
+                type="tel"
+                placeholder="+7 999 123 4567"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="bg-secondary border-border"
+              />
+              <p className="text-xs text-muted-foreground">
+                Введите номер в международном формате
+              </p>
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="message">Сообщение</Label>
-          <Textarea
-            id="message"
-            placeholder="Введите ваше сообщение..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="min-h-[120px] bg-secondary border-border resize-none"
-          />
-        </div>
+            <div className="space-y-2">
+              <Label>Сообщение</Label>
+              <Textarea
+                placeholder="Введите ваше сообщение..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="min-h-[120px] bg-secondary border-border resize-none"
+              />
+            </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Изображение (опционально)</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => document.getElementById('image-upload')?.click()}
+                  >
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    {imageFile ? imageFile.name : 'Выбрать фото'}
+                  </Button>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Голосовое (опционально)</Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => document.getElementById('audio-upload')?.click()}
+                  >
+                    <Mic className="mr-2 h-4 w-4" />
+                    {audioFile ? audioFile.name : 'Выбрать аудио'}
+                  </Button>
+                  <input
+                    id="audio-upload"
+                    type="file"
+                    accept="audio/*"
+                    className="hidden"
+                    onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+              </div>
+            </div>
+
             <Button
-              type="button"
-              variant="outline"
               className="w-full"
-              onClick={() => document.getElementById('image-input')?.click()}
+              size="lg"
+              onClick={handleSendMessage}
+              disabled={!phoneNumber || (!message && !imageFile && !audioFile) || isSending}
             >
-              <ImageIcon className="mr-2 h-4 w-4" />
-              {image ? image.name : 'Прикрепить фото'}
+              <SendIcon className="mr-2 h-4 w-4" />
+              {isSending ? "Отправка..." : "Отправить сообщение"}
             </Button>
-            <input
-              id="image-input"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => setImage(e.target.files?.[0] || null)}
-            />
-          </div>
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => document.getElementById('audio-input')?.click()}
-            >
-              <Mic className="mr-2 h-4 w-4" />
-              {audio ? audio.name : 'Прикрепить аудио'}
-            </Button>
-            <input
-              id="audio-input"
-              type="file"
-              accept="audio/*"
-              className="hidden"
-              onChange={(e) => setAudio(e.target.files?.[0] || null)}
-            />
-          </div>
-        </div>
-
-        <Button
-          className="w-full"
-          size="lg"
-          onClick={handleSend}
-          disabled={!selectedProfile || !phone || isSending}
-        >
-          <SendIcon className="mr-2 h-4 w-4" />
-          {isSending ? "Отправка..." : "Отправить сообщение"}
-        </Button>
+          </>
+        )}
       </CardContent>
     </Card>
   );
