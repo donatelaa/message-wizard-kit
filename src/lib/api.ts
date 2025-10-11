@@ -121,4 +121,28 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/health`);
     return response.json();
   },
+
+  // Key management
+  async validateKey(key: string): Promise<{ valid: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/keys/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key }),
+    });
+    return response.json();
+  },
+
+  async generateKeys(count: number): Promise<{ keys: string[] }> {
+    const response = await fetch(`${API_BASE_URL}/keys/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count }),
+    });
+    return response.json();
+  },
+
+  async listKeys(): Promise<{ active: string[]; used: string[] }> {
+    const response = await fetch(`${API_BASE_URL}/keys/list`);
+    return response.json();
+  },
 };

@@ -500,6 +500,10 @@ class WhatsAppSender:
     def get_profile_info(self, profile_name):
         """Get full profile information"""
         profile_path = os.path.join(PROFILES_DIR, profile_name)
+        
+        if not os.path.exists(profile_path):
+            raise Exception("Profile not found")
+            
         profile_info_path = os.path.join(profile_path, "profile_info.json")
         
         info = {
@@ -516,6 +520,19 @@ class WhatsAppSender:
                     info.update(saved_info)
             except Exception as e:
                 print(f"Error reading profile info: {str(e)}")
+        else:
+            # Create profile_info.json if it doesn't exist
+            try:
+                # Try to get creation time from directory
+                created_timestamp = os.path.getctime(profile_path)
+                from datetime import datetime
+                info['created_at'] = datetime.fromtimestamp(created_timestamp).isoformat()
+                
+                # Save it for future use
+                with open(profile_info_path, 'w') as f:
+                    json.dump(info, f)
+            except Exception as e:
+                print(f"Error creating profile info: {str(e)}")
         
         # Get statistics
         stats = self.get_profile_stats(profile_name)

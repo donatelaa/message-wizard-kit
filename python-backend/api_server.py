@@ -6,6 +6,7 @@ Provides REST API endpoints for the React frontend
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from whatsapp_sender import WhatsAppSender
+from key_manager import validate_key, create_keys, list_keys
 import os
 import json
 from werkzeug.utils import secure_filename
@@ -79,9 +80,15 @@ def create_profile():
 def get_profile_info(profile_name):
     """Get detailed profile information"""
     try:
+        # Check if profile exists
+        profile_path = os.path.join('profiles', profile_name)
+        if not os.path.exists(profile_path):
+            return jsonify({"error": "Profile not found"}), 404
+            
         info = sender.get_profile_info(profile_name)
         return jsonify(info)
     except Exception as e:
+        print(f"Error getting profile info: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/profile/<profile_name>/stats', methods=['GET'])
@@ -222,6 +229,34 @@ def get_analytics():
         "avg_delay": avg_delay,
         "recent_messages": stats['recent_messages']
     })
+
+# Access key management endpoints
+@app.route('/api/keys/validate', methods=['POST'])
+def validate_access_key():
+    """Validate an access key"""
+    data = request.json
+    key = data.get('key')
+    
+    if not key:
+        return jsonify({"error": "Key is required"}), 400
+    
+    result = validate_key(key)
+    return jsonify(result)
+
+@app.route('/api/keys/generate', methods=['POST'])
+def generate_keys():
+    """Generate new access keys (admin only)"""
+    data = request.json
+    count = data.get('count', 1)
+    
+    keys = create_keys(count)
+    return jsonify({"keys": keys})
+
+@app.route('/api/keys/list', methods=['GET'])
+def get_keys():
+    """List all keys (admin only)"""
+    keys_data = list_keys()
+    return jsonify(keys_data)
 
 if __name__ == '__main__':
     print("Starting WhatsApp Sender API Server...")
