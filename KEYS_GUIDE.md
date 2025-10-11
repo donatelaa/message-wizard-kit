@@ -7,7 +7,7 @@
 ## Как это работает?
 
 1. **Первый запуск**: При первом открытии приложения пользователь видит окно активации
-2. **Ввод ключа**: Пользователь вводит 16-значный ключ доступа
+2. **Ввод ключа**: Пользователь вводит ключ из 16 больших букв (A-Z)
 3. **Активация**: После успешной активации ключ становится использованным
 4. **Бесконечный доступ**: Активированное устройство получает постоянный доступ
 
@@ -34,13 +34,13 @@ curl -X POST http://localhost:5000/api/keys/generate \
 
 Для тестирования создан ключ:
 ```
-TEST1234ABCD5678
+TESTKEYMASTERABC
 ```
 
 Чтобы его активировать:
 ```bash
 cd python-backend
-python -c "from key_manager import create_keys, load_keys, save_keys; data = load_keys(); data['active'].append('TEST1234ABCD5678'); save_keys(data); print('Тестовый ключ создан!')"
+python -c "from key_manager import load_keys, save_keys; data = load_keys(); data['active'].append('TESTKEYMASTERABC'); save_keys(data); print('Тестовый ключ создан!')"
 ```
 
 ## Управление ключами
@@ -78,16 +78,16 @@ localStorage.removeItem("app_activated");
 ```json
 {
   "active": [
-    "ABC123DEF456GHI7",
-    "XYZ789UVW012RST3"
+    "ABCDEFGHIJKLMNOP",
+    "QRSTUVWXYZABCDEF"
   ],
   "used": [
-    "USED1234ABCD5678"
+    "TESTKEYMASTERABC"
   ]
 }
 ```
 
-- **active**: Ключи, которые еще не использовались
+- **active**: Ключи, которые еще не использовались (только большие буквы A-Z)
 - **used**: Ключи, которые уже были активированы
 
 ## Безопасность
@@ -116,7 +116,7 @@ setHasAccess(true); // Всегда разрешать доступ
 Проверка и активация ключа
 ```json
 {
-  "key": "ABC123DEF456GHI7"
+  "key": "ABCDEFGHIJKLMNOP"
 }
 ```
 

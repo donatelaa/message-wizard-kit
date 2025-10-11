@@ -10,8 +10,8 @@ import string
 KEYS_FILE = os.path.join(os.getcwd(), "access_keys.json")
 
 def generate_key():
-    """Generate a random access key"""
-    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+    """Generate a random access key (only uppercase letters)"""
+    chars = string.ascii_uppercase
     return ''.join(secrets.choice(chars) for _ in range(16))
 
 def load_keys():

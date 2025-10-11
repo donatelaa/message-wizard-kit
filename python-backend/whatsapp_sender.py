@@ -216,29 +216,13 @@ class WhatsAppSender:
                     
                     image_input.send_keys(image_path)
                     print("Image file selected, waiting for preview...")
-                    time.sleep(4)
-
-                    # Wait for and click send button
-                    send_selectors = [
-                        '//span[@data-icon="send"]',
-                        '//button[@aria-label="Send" or @aria-label="Отправить"]',
-                        '//div[@aria-label="Send" or @aria-label="Отправить"]'
-                    ]
+                    time.sleep(3)
                     
-                    send_btn = None
-                    for selector in send_selectors:
-                        try:
-                            send_btn = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
-                            break
-                        except:
-                            continue
-                    
-                    if not send_btn:
-                        raise Exception("Could not find send button")
-                    
-                    send_btn.click()
+                    # Press Enter to send
+                    from selenium.webdriver.common.keys import Keys
+                    image_input.send_keys(Keys.ENTER)
+                    print("Image sent successfully (Enter pressed)")
                     time.sleep(5)
-                    print("Image sent successfully")
                 except Exception as e:
                     print(f"Error sending image: {str(e)}")
                     raise
@@ -287,29 +271,13 @@ class WhatsAppSender:
                     
                     doc_input.send_keys(audio_path)
                     print("Audio file selected, waiting for preview...")
-                    time.sleep(4)
-
-                    # Click send button
-                    send_selectors = [
-                        '//span[@data-icon="send"]',
-                        '//button[@aria-label="Send" or @aria-label="Отправить"]',
-                        '//div[@aria-label="Send" or @aria-label="Отправить"]'
-                    ]
+                    time.sleep(3)
                     
-                    send_btn = None
-                    for selector in send_selectors:
-                        try:
-                            send_btn = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
-                            break
-                        except:
-                            continue
-                    
-                    if not send_btn:
-                        raise Exception("Could not find send button")
-                    
-                    send_btn.click()
+                    # Press Enter to send
+                    from selenium.webdriver.common.keys import Keys
+                    doc_input.send_keys(Keys.ENTER)
+                    print("Audio sent successfully (Enter pressed)")
                     time.sleep(5)
-                    print("Audio sent successfully")
                 except Exception as e:
                     print(f"Error sending audio: {str(e)}")
                     raise

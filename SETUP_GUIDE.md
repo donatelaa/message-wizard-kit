@@ -4,7 +4,7 @@
 
 Теперь приложение защищено системой ключей доступа. При первом запуске нужно ввести ключ активации.
 
-**Тестовый ключ для быстрого старта**: `TESTKEY12345678`
+**Тестовый ключ для быстрого старта**: `TESTKEYMASTERABC`
 
 Подробнее о ключах см. [KEYS_GUIDE.md](KEYS_GUIDE.md)
 
@@ -71,7 +71,7 @@ npm --version
 
 ```bash
 cd python-backend
-python -c "from key_manager import load_keys, save_keys; data = load_keys(); data['active'].append('TESTKEY12345678'); save_keys(data); print('Тестовый ключ TESTKEY12345678 создан!')"
+python -c "from key_manager import load_keys, save_keys; data = load_keys(); data['active'].append('TESTKEYMASTERABC'); save_keys(data); print('Тестовый ключ TESTKEYMASTERABC создан!')"
 ```
 
 Этот ключ можно использовать для первого входа.
@@ -150,7 +150,7 @@ npm install
 
 ### ВАЖНО: Первый запуск
 
-При первом запуске приложения вы увидите экран активации. Используйте ключ `TESTKEY12345678` для быстрого доступа.
+При первом запуске приложения вы увидите экран активации. Используйте ключ `TESTKEYMASTERABC` для быстрого доступа.
 
 ### Вариант 1: Локальный запуск (Рекомендуется для разработки)
 
