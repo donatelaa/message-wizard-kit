@@ -204,12 +204,12 @@ class WhatsAppSender:
                     print("Image file selected, waiting for preview...")
                     time.sleep(3)
                     
-                    # Press Enter to send (using message box after file is loaded)
-                    msg_box = wait.until(EC.presence_of_element_located(
-                        (By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
+                    # Click send button
+                    send_btn = wait.until(EC.element_to_be_clickable(
+                        (By.XPATH, '//*[@id="app"]/div[1]/div/div[3]/div/div[2]/div[2]/div/span/div/div/div/div[2]/div/div[2]/div[2]/div')
                     ))
-                    msg_box.send_keys(Keys.ENTER)
-                    print("Image sent successfully (Enter pressed)")
+                    send_btn.click()
+                    print("Image sent successfully (button clicked)")
                     time.sleep(5)
                 except Exception as e:
                     print(f"Error sending image: {str(e)}")
@@ -247,12 +247,12 @@ class WhatsAppSender:
                     print("Audio file selected, waiting for preview...")
                     time.sleep(3)
                     
-                    # Press Enter to send (using message box after file is loaded)
-                    msg_box = wait.until(EC.presence_of_element_located(
-                        (By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
+                    # Click send button
+                    send_btn = wait.until(EC.element_to_be_clickable(
+                        (By.XPATH, '//*[@id="app"]/div[1]/div/div[3]/div/div[2]/div[2]/div/span/div/div/div/div[2]/div/div[2]/div[2]/div')
                     ))
-                    msg_box.send_keys(Keys.ENTER)
-                    print("Audio sent successfully (Enter pressed)")
+                    send_btn.click()
+                    print("Audio sent successfully (button clicked)")
                     time.sleep(5)
                 except Exception as e:
                     print(f"Error sending audio: {str(e)}")
