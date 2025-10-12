@@ -176,24 +176,10 @@ class WhatsAppSender:
             if image_path and os.path.exists(image_path):
                 print(f"Sending image: {image_path}")
                 try:
-                    # Click attach button (clip icon)
-                    attach_selectors = [
-                        '//div[@title="Attach" or @title="Прикрепить"]',
-                        '//span[@data-icon="clip" or @data-icon="plus"]',
-                        '//div[contains(@aria-label, "Attach")]'
-                    ]
-                    
-                    attach_btn = None
-                    for selector in attach_selectors:
-                        try:
-                            attach_btn = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
-                            break
-                        except:
-                            continue
-                    
-                    if not attach_btn:
-                        raise Exception("Could not find attach button")
-                    
+                    # Click attach button using provided XPath
+                    attach_btn = wait.until(
+                        EC.element_to_be_clickable((By.XPATH, '//*[@id="main"]/footer/div[1]/div/span/div/div[2]/div/div[1]/button'))
+                    )
                     attach_btn.click()
                     time.sleep(2)
 
@@ -218,9 +204,11 @@ class WhatsAppSender:
                     print("Image file selected, waiting for preview...")
                     time.sleep(3)
                     
-                    # Press Enter to send
-                    from selenium.webdriver.common.keys import Keys
-                    image_input.send_keys(Keys.ENTER)
+                    # Press Enter to send (using message box after file is loaded)
+                    msg_box = wait.until(EC.presence_of_element_located(
+                        (By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
+                    ))
+                    msg_box.send_keys(Keys.ENTER)
                     print("Image sent successfully (Enter pressed)")
                     time.sleep(5)
                 except Exception as e:
@@ -231,24 +219,10 @@ class WhatsAppSender:
             if audio_path and os.path.exists(audio_path):
                 print(f"Sending audio: {audio_path}")
                 try:
-                    # Click attach button
-                    attach_selectors = [
-                        '//div[@title="Attach" or @title="Прикрепить"]',
-                        '//span[@data-icon="clip" or @data-icon="plus"]',
-                        '//div[contains(@aria-label, "Attach")]'
-                    ]
-                    
-                    attach_btn = None
-                    for selector in attach_selectors:
-                        try:
-                            attach_btn = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
-                            break
-                        except:
-                            continue
-                    
-                    if not attach_btn:
-                        raise Exception("Could not find attach button")
-                    
+                    # Click attach button using provided XPath
+                    attach_btn = wait.until(
+                        EC.element_to_be_clickable((By.XPATH, '//*[@id="main"]/footer/div[1]/div/span/div/div[2]/div/div[1]/button'))
+                    )
                     attach_btn.click()
                     time.sleep(2)
 
@@ -273,9 +247,11 @@ class WhatsAppSender:
                     print("Audio file selected, waiting for preview...")
                     time.sleep(3)
                     
-                    # Press Enter to send
-                    from selenium.webdriver.common.keys import Keys
-                    doc_input.send_keys(Keys.ENTER)
+                    # Press Enter to send (using message box after file is loaded)
+                    msg_box = wait.until(EC.presence_of_element_located(
+                        (By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
+                    ))
+                    msg_box.send_keys(Keys.ENTER)
                     print("Audio sent successfully (Enter pressed)")
                     time.sleep(5)
                 except Exception as e:
