@@ -234,14 +234,20 @@ def get_analytics():
 @app.route('/api/keys/validate', methods=['POST'])
 def validate_access_key():
     """Validate an access key"""
-    data = request.json
-    key = data.get('key')
-    
-    if not key:
-        return jsonify({"error": "Key is required"}), 400
-    
-    result = validate_key(key)
-    return jsonify(result)
+    try:
+        data = request.json
+        key = data.get('key')
+        
+        if not key:
+            return jsonify({"valid": False, "message": "Ключ не указан"}), 400
+        
+        print(f"API: Validating key: {key}")
+        result = validate_key(key)
+        print(f"API: Validation result: {result}")
+        return jsonify(result)
+    except Exception as e:
+        print(f"API: Error validating key: {str(e)}")
+        return jsonify({"valid": False, "message": f"Ошибка сервера: {str(e)}"}), 500
 
 @app.route('/api/keys/generate', methods=['POST'])
 def generate_keys():

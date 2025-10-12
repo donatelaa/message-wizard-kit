@@ -7,7 +7,7 @@ import os
 import secrets
 import string
 
-KEYS_FILE = os.path.join(os.getcwd(), "access_keys.json")
+KEYS_FILE = os.path.join(os.path.dirname(__file__), "access_keys.json")
 
 def generate_key():
     """Generate a random access key (only uppercase letters)"""
@@ -17,23 +17,36 @@ def generate_key():
 def load_keys():
     """Load all keys from file"""
     if not os.path.exists(KEYS_FILE):
-        # Create file with initial structure
-        initial_data = {"active": [], "used": []}
-        with open(KEYS_FILE, 'w') as f:
-            json.dump(initial_data, f, indent=2)
+        # Create file with initial structure and test key
+        initial_data = {
+            "active": ["TESTKEYMASTERABC"],
+            "used": []
+        }
+        try:
+            with open(KEYS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(initial_data, f, indent=2, ensure_ascii=False)
+            print(f"Created keys file at: {KEYS_FILE}")
+        except Exception as e:
+            print(f"Error creating keys file: {e}")
         return initial_data
     
     try:
-        with open(KEYS_FILE, 'r') as f:
-            return json.load(f)
+        with open(KEYS_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            print(f"Loaded keys: {len(data.get('active', []))} active, {len(data.get('used', []))} used")
+            return data
     except Exception as e:
         print(f"Error loading keys: {e}")
-        return {"active": [], "used": []}
+        return {"active": ["TESTKEYMASTERABC"], "used": []}
 
 def save_keys(keys_data):
     """Save keys to file"""
-    with open(KEYS_FILE, 'w') as f:
-        json.dump(keys_data, f, indent=2)
+    try:
+        with open(KEYS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(keys_data, f, indent=2, ensure_ascii=False)
+        print(f"Saved keys to: {KEYS_FILE}")
+    except Exception as e:
+        print(f"Error saving keys: {e}")
 
 def create_keys(count=1):
     """Create new access keys"""
@@ -49,13 +62,16 @@ def create_keys(count=1):
         new_keys.append(key)
     
     save_keys(keys_data)
+    print(f"Created {len(new_keys)} new keys")
     return new_keys
 
 def validate_key(key):
     """Validate and activate a key"""
+    print(f"Validating key: {key}")
     keys_data = load_keys()
     
     if key in keys_data["used"]:
+        print(f"Key {key} already used")
         return {"valid": False, "message": "Ключ уже был использован"}
     
     if key in keys_data["active"]:
@@ -63,8 +79,10 @@ def validate_key(key):
         keys_data["active"].remove(key)
         keys_data["used"].append(key)
         save_keys(keys_data)
+        print(f"Key {key} activated successfully")
         return {"valid": True, "message": "Ключ активирован успешно"}
     
+    print(f"Key {key} is invalid")
     return {"valid": False, "message": "Недействительный ключ"}
 
 def list_keys():
