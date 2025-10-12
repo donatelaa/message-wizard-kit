@@ -17,10 +17,18 @@ def generate_key():
 def load_keys():
     """Load all keys from file"""
     if not os.path.exists(KEYS_FILE):
-        return {"active": [], "used": []}
+        # Create file with initial structure
+        initial_data = {"active": [], "used": []}
+        with open(KEYS_FILE, 'w') as f:
+            json.dump(initial_data, f, indent=2)
+        return initial_data
     
-    with open(KEYS_FILE, 'r') as f:
-        return json.load(f)
+    try:
+        with open(KEYS_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading keys: {e}")
+        return {"active": [], "used": []}
 
 def save_keys(keys_data):
     """Save keys to file"""
