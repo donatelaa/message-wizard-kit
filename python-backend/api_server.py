@@ -264,6 +264,27 @@ def get_keys():
     keys_data = list_keys()
     return jsonify(keys_data)
 
+@app.route('/api/check-numbers', methods=['POST'])
+def check_numbers():
+    """Check if phone numbers are registered on WhatsApp"""
+    try:
+        data = request.json
+        phone_numbers = data.get('phone_numbers', [])
+        
+        if not phone_numbers:
+            return jsonify({"error": "Phone numbers are required"}), 400
+        
+        result = sender.check_numbers(phone_numbers)
+        return jsonify(result)
+    
+    except Exception as e:
+        return jsonify({
+            "success": False, 
+            "message": f"Server error: {str(e)}",
+            "registered": [],
+            "unregistered": []
+        }), 500
+
 if __name__ == '__main__':
     print("Starting WhatsApp Sender API Server...")
     print("Server running on http://localhost:5000")

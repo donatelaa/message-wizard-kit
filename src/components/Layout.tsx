@@ -1,5 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Send, Users, UserPlus, MessageSquare, BarChart3 } from "lucide-react";
+import { Send, Users, UserPlus, MessageSquare, BarChart3, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -12,6 +12,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     if (location.pathname === "/create-profile") return "create";
     if (location.pathname === "/mass-send") return "mass";
     if (location.pathname === "/analytics") return "analytics";
+    if (location.pathname === "/check-numbers") return "check";
     return "send";
   };
 
@@ -64,9 +65,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </TabsList>
           </Tabs>
 
-          {/* Second row - 2 buttons */}
+          {/* Second row - 3 buttons */}
           <Tabs value={getActiveTab()}>
-            <TabsList className="grid w-full grid-cols-2 bg-card border border-border/50 h-12">
+            <TabsList className="grid w-full grid-cols-3 bg-card border border-border/50 h-12">
               <TabsTrigger
                 value="mass"
                 onClick={() => navigate("/mass-send")}
@@ -74,6 +75,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               >
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Массовая рассылка
+              </TabsTrigger>
+              <TabsTrigger
+                value="check"
+                onClick={() => navigate("/check-numbers")}
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[0_0_20px_hsl(280_100%_70%/0.5)] transition-all"
+              >
+                <Search className="mr-2 h-4 w-4" />
+                Проверка номеров
               </TabsTrigger>
               <TabsTrigger
                 value="analytics"

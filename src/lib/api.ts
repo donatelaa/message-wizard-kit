@@ -145,4 +145,19 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/keys/list`);
     return response.json();
   },
+
+  // Check WhatsApp numbers
+  async checkNumbers(phoneNumbers: string[]): Promise<{ 
+    success: boolean; 
+    registered: string[]; 
+    unregistered: string[];
+    message: string;
+  }> {
+    const response = await fetch(`${API_BASE_URL}/check-numbers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone_numbers: phoneNumbers }),
+    });
+    return response.json();
+  },
 };

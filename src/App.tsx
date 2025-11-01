@@ -10,6 +10,7 @@ import Profiles from "./pages/Profiles";
 import CreateProfile from "./pages/CreateProfile";
 import MassSend from "./pages/MassSend";
 import Analytics from "./pages/Analytics";
+import CheckNumbers from "./pages/CheckNumbers";
 import NotFound from "./pages/NotFound";
 import AccessKey from "./pages/AccessKey";
 
@@ -62,6 +63,7 @@ const App = () => {
               <Route path="/create-profile" element={<CreateProfile />} />
               <Route path="/mass-send" element={<MassSend />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/check-numbers" element={<CheckNumbers />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>

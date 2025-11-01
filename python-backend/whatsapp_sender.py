@@ -484,6 +484,113 @@ class WhatsAppSender:
         
         return info
 
+    def check_numbers(self, phone_numbers):
+        """Check if phone numbers are registered on WhatsApp"""
+        print(f"Checking {len(phone_numbers)} numbers...")
+        
+        # Use first available profile for checking
+        if not self.profiles:
+            return {
+                "success": False,
+                "message": "No profiles available. Please create a profile first.",
+                "registered": [],
+                "unregistered": []
+            }
+        
+        profile_name = self.profiles[0]
+        profile_path = os.path.join(PROFILES_DIR, profile_name)
+        
+        options = webdriver.ChromeOptions()
+        options.add_argument(f"user-data-dir={profile_path}")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
+        
+        driver = None
+        registered = []
+        unregistered = []
+        
+        try:
+            driver = webdriver.Chrome(options=options)
+            driver.get("https://web.whatsapp.com/")
+            
+            # Wait for WhatsApp to load
+            print("Waiting for WhatsApp Web to load...")
+            WebDriverWait(driver, 60).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, '//div[@contenteditable="true"][@data-tab="10" or @data-tab="6"]')
+                )
+            )
+            print("WhatsApp Web loaded successfully!")
+            
+            for phone in phone_numbers:
+                try:
+                    print(f"Checking {phone}...")
+                    
+                    # Navigate to chat URL
+                    driver.get(f"https://web.whatsapp.com/send?phone={phone}")
+                    time.sleep(3)
+                    
+                    # Check if we see an alert/error message for invalid number
+                    try:
+                        # Look for error message indicating number not on WhatsApp
+                        alert = WebDriverWait(driver, 5).until(
+                            EC.presence_of_element_located(
+                                (By.XPATH, '//div[@role="button" and contains(text(), "OK")]')
+                            )
+                        )
+                        # If we find OK button, it means number is not registered
+                        print(f"{phone} - NOT registered")
+                        unregistered.append(phone)
+                        alert.click()
+                        time.sleep(1)
+                    except TimeoutException:
+                        # No error means number is registered
+                        # Check if message input box is visible
+                        try:
+                            WebDriverWait(driver, 5).until(
+                                EC.presence_of_element_located(
+                                    (By.XPATH, '//div[@contenteditable="true"][@data-tab="10" or @data-tab="6"]')
+                                )
+                            )
+                            print(f"{phone} - Registered")
+                            registered.append(phone)
+                        except TimeoutException:
+                            # If no input box, consider it unregistered
+                            print(f"{phone} - NOT registered (no input box)")
+                            unregistered.append(phone)
+                    
+                    time.sleep(2)  # Delay between checks
+                    
+                except Exception as e:
+                    print(f"Error checking {phone}: {str(e)}")
+                    # On error, mark as unregistered to be safe
+                    unregistered.append(phone)
+            
+            print(f"\nCheck complete! Registered: {len(registered)}, Unregistered: {len(unregistered)}")
+            
+            return {
+                "success": True,
+                "registered": registered,
+                "unregistered": unregistered,
+                "message": f"Checked {len(phone_numbers)} numbers"
+            }
+            
+        except Exception as e:
+            print(f"Error during number check: {str(e)}")
+            return {
+                "success": False,
+                "message": f"Error: {str(e)}",
+                "registered": registered,
+                "unregistered": unregistered
+            }
+        
+        finally:
+            if driver:
+                driver.quit()
+
 # Example usage
 if __name__ == "__main__":
     sender = WhatsAppSender()
