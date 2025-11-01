@@ -526,51 +526,77 @@ class WhatsAppSender:
                 try:
                     print(f"Checking {phone}...")
                     
-                    # Navigate to chat URL (same as in send_message)
-                    driver.get(
-                        f'https://web.whatsapp.com/send/?phone={phone}'
-                        f'&text&type=phone_number&app_absent=0'
-                    )
+                    # Navigate to chat URL
+                    chat_url = f'https://web.whatsapp.com/send/?phone={phone}&text&type=phone_number&app_absent=0'
+                    print(f"Opening URL: {chat_url}")
+                    driver.get(chat_url)
                     
-                    # Wait for chat to load
-                    time.sleep(5)
+                    # Wait longer for the page to fully load
+                    time.sleep(8)
                     
-                    # Try to find the message input box
-                    # If it exists, the chat opened successfully = number is registered
+                    # Check if chat opened successfully by looking for message input
+                    is_registered = False
+                    
                     try:
+                        # Try multiple selectors with shorter timeout
+                        short_wait = WebDriverWait(driver, 10)
+                        
+                        # Try to find the message input box
                         msg_box_selectors = [
                             '//div[@contenteditable="true"][@data-tab="10"]',
                             '//div[@contenteditable="true"][@data-tab="6"]',
-                            '//div[@contenteditable="true" and @role="textbox"]'
+                            '//div[@contenteditable="true" and @role="textbox"]',
+                            '//div[contains(@class, "copyable-text")][@contenteditable="true"]'
                         ]
                         
-                        msg_box = None
                         for selector in msg_box_selectors:
                             try:
-                                msg_box = wait.until(EC.presence_of_element_located((By.XPATH, selector)))
-                                break
+                                msg_box = short_wait.until(EC.presence_of_element_located((By.XPATH, selector)))
+                                if msg_box:
+                                    print(f"{phone} - REGISTERED (message box found)")
+                                    is_registered = True
+                                    break
                             except:
                                 continue
                         
-                        if msg_box:
-                            # Message box found = chat opened = number is registered
-                            print(f"{phone} - Registered (chat opened)")
-                            registered.append(phone)
-                        else:
-                            # No message box = chat didn't open = number not registered
-                            print(f"{phone} - NOT registered (no message box)")
-                            unregistered.append(phone)
-                            
-                    except TimeoutException:
-                        # No message box = chat didn't open = number not registered
-                        print(f"{phone} - NOT registered (timeout)")
+                        # If no message box found, check for error messages
+                        if not is_registered:
+                            try:
+                                # Look for error indicators
+                                error_selectors = [
+                                    '//*[contains(text(), "Phone number shared via url is invalid")]',
+                                    '//*[contains(text(), "invalid")]',
+                                ]
+                                
+                                for error_selector in error_selectors:
+                                    try:
+                                        error_elem = driver.find_element(By.XPATH, error_selector)
+                                        if error_elem:
+                                            print(f"{phone} - NOT REGISTERED (error message found)")
+                                            break
+                                    except:
+                                        continue
+                                else:
+                                    # No error found but no message box either
+                                    print(f"{phone} - NOT REGISTERED (no message box, no clear error)")
+                            except:
+                                print(f"{phone} - NOT REGISTERED (exception during error check)")
+                    
+                    except Exception as e:
+                        print(f"{phone} - NOT REGISTERED (exception: {str(e)})")
+                    
+                    # Add to appropriate list
+                    if is_registered:
+                        registered.append(phone)
+                    else:
                         unregistered.append(phone)
                     
-                    time.sleep(2)  # Delay between checks
+                    # Small delay between checks
+                    time.sleep(3)
                     
                 except Exception as e:
                     print(f"Error checking {phone}: {str(e)}")
-                    # On error, mark as unregistered to be safe
+                    # On error, mark as unregistered
                     unregistered.append(phone)
             
             print(f"\nCheck complete! Registered: {len(registered)}, Unregistered: {len(unregistered)}")
