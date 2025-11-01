@@ -512,39 +512,58 @@ class WhatsAppSender:
         
         try:
             driver = webdriver.Chrome(options=options)
+            driver.maximize_window()
             driver.get("https://web.whatsapp.com/")
             
             # Wait for WhatsApp to load
             print("Waiting for WhatsApp Web to load...")
-            WebDriverWait(driver, 60).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, '//div[@contenteditable="true"][@data-tab="10" or @data-tab="6"]')
-                )
-            )
+            self.wait_for_login(driver)
             print("WhatsApp Web loaded successfully!")
+            
+            wait = WebDriverWait(driver, 60)
             
             for phone in phone_numbers:
                 try:
                     print(f"Checking {phone}...")
                     
-                    # Navigate to chat URL
-                    driver.get(f"https://web.whatsapp.com/send?phone={phone}")
+                    # Navigate to chat URL (same as in send_message)
+                    driver.get(
+                        f'https://web.whatsapp.com/send/?phone={phone}'
+                        f'&text&type=phone_number&app_absent=0'
+                    )
+                    
+                    # Wait for chat to load
                     time.sleep(5)
                     
                     # Try to find the message input box
                     # If it exists, the chat opened successfully = number is registered
                     try:
-                        message_box = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located(
-                                (By.XPATH, '//div[@contenteditable="true"][@data-tab="10" or @data-tab="6"]')
-                            )
-                        )
-                        # Message box found = chat opened = number is registered
-                        print(f"{phone} - Registered (chat opened)")
-                        registered.append(phone)
+                        msg_box_selectors = [
+                            '//div[@contenteditable="true"][@data-tab="10"]',
+                            '//div[@contenteditable="true"][@data-tab="6"]',
+                            '//div[@contenteditable="true" and @role="textbox"]'
+                        ]
+                        
+                        msg_box = None
+                        for selector in msg_box_selectors:
+                            try:
+                                msg_box = wait.until(EC.presence_of_element_located((By.XPATH, selector)))
+                                break
+                            except:
+                                continue
+                        
+                        if msg_box:
+                            # Message box found = chat opened = number is registered
+                            print(f"{phone} - Registered (chat opened)")
+                            registered.append(phone)
+                        else:
+                            # No message box = chat didn't open = number not registered
+                            print(f"{phone} - NOT registered (no message box)")
+                            unregistered.append(phone)
+                            
                     except TimeoutException:
                         # No message box = chat didn't open = number not registered
-                        print(f"{phone} - NOT registered (chat didn't open)")
+                        print(f"{phone} - NOT registered (timeout)")
                         unregistered.append(phone)
                     
                     time.sleep(2)  # Delay between checks
