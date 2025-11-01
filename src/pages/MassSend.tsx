@@ -18,6 +18,9 @@ const MassSend = () => {
   const [profileAudios, setProfileAudios] = useState<{ [key: string]: File | null }>({});
   const [delay, setDelay] = useState([30]);
   const [randomDelay, setRandomDelay] = useState(false);
+  const [autoPauseEnabled, setAutoPauseEnabled] = useState(false);
+  const [autoPauseAfter, setAutoPauseAfter] = useState([30]);
+  const [autoPauseDuration, setAutoPauseDuration] = useState([15]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isSending, setIsSending] = useState(false);
   const { toast } = useToast();
@@ -104,6 +107,9 @@ const MassSend = () => {
       const delayConfig = {
         random: randomDelay,
         delay: delay[0],
+        auto_pause_enabled: autoPauseEnabled,
+        auto_pause_after: autoPauseAfter[0],
+        auto_pause_duration: autoPauseDuration[0],
       };
 
       toast({
@@ -187,6 +193,62 @@ const MassSend = () => {
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>5 сек</span>
                   <span>120 сек</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="auto-pause" className="cursor-pointer">Авто-Пауза</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Автоматическая пауза после определённого количества сообщений
+                </p>
+              </div>
+              <Switch
+                id="auto-pause"
+                checked={autoPauseEnabled}
+                onCheckedChange={setAutoPauseEnabled}
+              />
+            </div>
+            
+            {autoPauseEnabled && (
+              <div className="space-y-4 pl-4 border-l-2 border-primary/30">
+                <div className="space-y-2">
+                  <Label className="text-sm">
+                    Пауза после: {autoPauseAfter[0]} сообщений
+                  </Label>
+                  <Slider
+                    value={autoPauseAfter}
+                    onValueChange={setAutoPauseAfter}
+                    min={10}
+                    max={100}
+                    step={5}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>10 сообщений</span>
+                    <span>100 сообщений</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm">
+                    Длительность паузы: {autoPauseDuration[0]} минут
+                  </Label>
+                  <Slider
+                    value={autoPauseDuration}
+                    onValueChange={setAutoPauseDuration}
+                    min={5}
+                    max={60}
+                    step={5}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>5 мин</span>
+                    <span>60 мин</span>
+                  </div>
                 </div>
               </div>
             )}

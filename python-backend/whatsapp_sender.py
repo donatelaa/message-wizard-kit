@@ -334,7 +334,9 @@ class WhatsAppSender:
         Args:
             phone_numbers: List of phone numbers
             profiles_config: Dict with profile names as keys and messages as values
-            delay_config: Dict with 'random' boolean and 'delay' int (seconds)
+            delay_config: Dict with 'random' boolean, 'delay' int (seconds),
+                        'auto_pause_enabled' boolean, 'auto_pause_after' int (messages),
+                        'auto_pause_duration' int (minutes)
             profile_images: Dict with profile names as keys and image paths as values
             profile_audios: Dict with profile names as keys and audio paths as values
         """
@@ -343,8 +345,20 @@ class WhatsAppSender:
         results = []
         profile_names = list(profiles_config.keys())
         profile_index = 0
+        
+        # Auto-pause settings
+        auto_pause_enabled = delay_config.get("auto_pause_enabled", False)
+        auto_pause_after = delay_config.get("auto_pause_after", 30)
+        auto_pause_duration = delay_config.get("auto_pause_duration", 15)
 
-        for phone in phone_numbers:
+        for idx, phone in enumerate(phone_numbers, 1):
+            # Check if we need to auto-pause
+            if auto_pause_enabled and idx > 1 and (idx - 1) % auto_pause_after == 0:
+                pause_seconds = auto_pause_duration * 60
+                print(f"\n🔔 АВТО-ПАУЗА: Отправлено {idx - 1} сообщений. Пауза на {auto_pause_duration} минут...")
+                time.sleep(pause_seconds)
+                print("Продолжаем рассылку...\n")
+            
             # Select profile (rotating)
             profile = profile_names[profile_index % len(profile_names)]
             message = profiles_config[profile]
@@ -359,14 +373,15 @@ class WhatsAppSender:
                 "status": result["success"]
             })
 
-            # Apply delay
-            if delay_config.get("random"):
-                delay_time = random.randint(20, 60)
-            else:
-                delay_time = delay_config.get("delay", 30)
+            # Apply delay (only if not the last message)
+            if idx < len(phone_numbers):
+                if delay_config.get("random"):
+                    delay_time = random.randint(20, 60)
+                else:
+                    delay_time = delay_config.get("delay", 30)
 
-            print(f"Waiting {delay_time} seconds before next message...")
-            time.sleep(delay_time)
+                print(f"Waiting {delay_time} seconds before next message...")
+                time.sleep(delay_time)
 
             profile_index += 1
 
@@ -513,77 +528,57 @@ class WhatsAppSender:
         try:
             driver = webdriver.Chrome(options=options)
             driver.maximize_window()
+            
+            # First load WhatsApp Web and wait for login
+            print("Loading WhatsApp Web...")
             driver.get("https://web.whatsapp.com/")
             
-            # Wait for WhatsApp to load
-            print("Waiting for WhatsApp Web to load...")
+            print("Waiting for WhatsApp Web login...")
             self.wait_for_login(driver)
-            print("WhatsApp Web loaded successfully!")
+            print("Login successful! Starting number check...")
+            time.sleep(3)
             
-            wait = WebDriverWait(driver, 60)
-            
+            # Now check each number
             for phone in phone_numbers:
                 try:
                     print(f"Checking {phone}...")
                     
-                    # Navigate to chat URL
+                    # Navigate directly to the chat URL (same as send_message)
                     chat_url = f'https://web.whatsapp.com/send/?phone={phone}&text&type=phone_number&app_absent=0'
-                    print(f"Opening URL: {chat_url}")
                     driver.get(chat_url)
                     
-                    # Wait longer for the page to fully load
-                    time.sleep(8)
+                    # Wait for page to load
+                    time.sleep(5)
                     
                     # Check if chat opened successfully by looking for message input
                     is_registered = False
                     
                     try:
-                        # Try multiple selectors with shorter timeout
-                        short_wait = WebDriverWait(driver, 10)
+                        # Try to find the message input box with shorter timeout
+                        wait = WebDriverWait(driver, 8)
                         
-                        # Try to find the message input box
                         msg_box_selectors = [
                             '//div[@contenteditable="true"][@data-tab="10"]',
                             '//div[@contenteditable="true"][@data-tab="6"]',
                             '//div[@contenteditable="true" and @role="textbox"]',
-                            '//div[contains(@class, "copyable-text")][@contenteditable="true"]'
                         ]
                         
                         for selector in msg_box_selectors:
                             try:
-                                msg_box = short_wait.until(EC.presence_of_element_located((By.XPATH, selector)))
+                                msg_box = wait.until(EC.presence_of_element_located((By.XPATH, selector)))
                                 if msg_box:
-                                    print(f"{phone} - REGISTERED (message box found)")
+                                    print(f"{phone} - ✓ REGISTERED")
                                     is_registered = True
                                     break
-                            except:
+                            except TimeoutException:
                                 continue
                         
-                        # If no message box found, check for error messages
+                        # If no message box found, number is not registered
                         if not is_registered:
-                            try:
-                                # Look for error indicators
-                                error_selectors = [
-                                    '//*[contains(text(), "Phone number shared via url is invalid")]',
-                                    '//*[contains(text(), "invalid")]',
-                                ]
-                                
-                                for error_selector in error_selectors:
-                                    try:
-                                        error_elem = driver.find_element(By.XPATH, error_selector)
-                                        if error_elem:
-                                            print(f"{phone} - NOT REGISTERED (error message found)")
-                                            break
-                                    except:
-                                        continue
-                                else:
-                                    # No error found but no message box either
-                                    print(f"{phone} - NOT REGISTERED (no message box, no clear error)")
-                            except:
-                                print(f"{phone} - NOT REGISTERED (exception during error check)")
+                            print(f"{phone} - ✗ NOT REGISTERED")
                     
                     except Exception as e:
-                        print(f"{phone} - NOT REGISTERED (exception: {str(e)})")
+                        print(f"{phone} - ✗ NOT REGISTERED (error: {str(e)})")
                     
                     # Add to appropriate list
                     if is_registered:
@@ -592,7 +587,7 @@ class WhatsAppSender:
                         unregistered.append(phone)
                     
                     # Small delay between checks
-                    time.sleep(3)
+                    time.sleep(2)
                     
                 except Exception as e:
                     print(f"Error checking {phone}: {str(e)}")
