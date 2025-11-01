@@ -484,21 +484,19 @@ class WhatsAppSender:
         
         return info
 
-    def check_numbers(self, phone_numbers):
+    def check_numbers(self, profile_name, phone_numbers):
         """Check if phone numbers are registered on WhatsApp"""
-        print(f"Checking {len(phone_numbers)} numbers...")
+        print(f"Checking {len(phone_numbers)} numbers using profile: {profile_name}...")
         
-        # Use first available profile for checking
-        if not self.profiles:
+        profile_path = os.path.join(PROFILES_DIR, profile_name)
+        
+        if not os.path.exists(profile_path):
             return {
                 "success": False,
-                "message": "No profiles available. Please create a profile first.",
+                "message": f"Profile {profile_name} not found",
                 "registered": [],
                 "unregistered": []
             }
-        
-        profile_name = self.profiles[0]
-        profile_path = os.path.join(PROFILES_DIR, profile_name)
         
         options = webdriver.ChromeOptions()
         options.add_argument(f"user-data-dir={profile_path}")
@@ -531,36 +529,23 @@ class WhatsAppSender:
                     
                     # Navigate to chat URL
                     driver.get(f"https://web.whatsapp.com/send?phone={phone}")
-                    time.sleep(3)
+                    time.sleep(5)
                     
-                    # Check if we see an alert/error message for invalid number
+                    # Try to find the message input box
+                    # If it exists, the chat opened successfully = number is registered
                     try:
-                        # Look for error message indicating number not on WhatsApp
-                        alert = WebDriverWait(driver, 5).until(
+                        message_box = WebDriverWait(driver, 10).until(
                             EC.presence_of_element_located(
-                                (By.XPATH, '//div[@role="button" and contains(text(), "OK")]')
+                                (By.XPATH, '//div[@contenteditable="true"][@data-tab="10" or @data-tab="6"]')
                             )
                         )
-                        # If we find OK button, it means number is not registered
-                        print(f"{phone} - NOT registered")
-                        unregistered.append(phone)
-                        alert.click()
-                        time.sleep(1)
+                        # Message box found = chat opened = number is registered
+                        print(f"{phone} - Registered (chat opened)")
+                        registered.append(phone)
                     except TimeoutException:
-                        # No error means number is registered
-                        # Check if message input box is visible
-                        try:
-                            WebDriverWait(driver, 5).until(
-                                EC.presence_of_element_located(
-                                    (By.XPATH, '//div[@contenteditable="true"][@data-tab="10" or @data-tab="6"]')
-                                )
-                            )
-                            print(f"{phone} - Registered")
-                            registered.append(phone)
-                        except TimeoutException:
-                            # If no input box, consider it unregistered
-                            print(f"{phone} - NOT registered (no input box)")
-                            unregistered.append(phone)
+                        # No message box = chat didn't open = number not registered
+                        print(f"{phone} - NOT registered (chat didn't open)")
+                        unregistered.append(phone)
                     
                     time.sleep(2)  # Delay between checks
                     

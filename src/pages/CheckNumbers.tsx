@@ -1,20 +1,49 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, XCircle, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/api";
+import { api, Profile } from "@/lib/api";
 
 const CheckNumbers = () => {
+  const [selectedProfile, setSelectedProfile] = useState("");
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [numbers, setNumbers] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [registeredNumbers, setRegisteredNumbers] = useState<string[]>([]);
   const [unregisteredNumbers, setUnregisteredNumbers] = useState<string[]>([]);
   const { toast } = useToast();
 
+  useEffect(() => {
+    loadProfiles();
+  }, []);
+
+  const loadProfiles = async () => {
+    try {
+      const data = await api.getProfiles();
+      setProfiles(data);
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить профили. Проверьте подключение к серверу.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCheckNumbers = async () => {
+    if (!selectedProfile) {
+      toast({
+        title: "Ошибка",
+        description: "Выберите профиль",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!numbers.trim()) {
       toast({
         title: "Ошибка",
@@ -43,7 +72,7 @@ const CheckNumbers = () => {
     setUnregisteredNumbers([]);
 
     try {
-      const result = await api.checkNumbers(phoneNumbers);
+      const result = await api.checkNumbers(selectedProfile, phoneNumbers);
 
       if (result.success) {
         setRegisteredNumbers(result.registered);
@@ -84,6 +113,22 @@ const CheckNumbers = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
+            <Label>Профиль</Label>
+            <Select value={selectedProfile} onValueChange={setSelectedProfile}>
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите профиль" />
+              </SelectTrigger>
+              <SelectContent>
+                {profiles.map((profile) => (
+                  <SelectItem key={profile.name} value={profile.name}>
+                    {profile.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label>Номера телефонов</Label>
             <Textarea
               placeholder="79222442442&#10;79222453248&#10;79222543212"
@@ -100,7 +145,7 @@ const CheckNumbers = () => {
             className="w-full"
             size="lg"
             onClick={handleCheckNumbers}
-            disabled={!numbers.trim() || isChecking}
+            disabled={!selectedProfile || !numbers.trim() || isChecking}
           >
             <Search className="mr-2 h-4 w-4" />
             {isChecking ? "Проверка..." : "Проверить номера"}

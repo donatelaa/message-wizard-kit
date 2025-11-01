@@ -269,12 +269,26 @@ def check_numbers():
     """Check if phone numbers are registered on WhatsApp"""
     try:
         data = request.json
+        profile_name = data.get('profile_name')
         phone_numbers = data.get('phone_numbers', [])
         
-        if not phone_numbers:
-            return jsonify({"error": "Phone numbers are required"}), 400
+        if not profile_name:
+            return jsonify({
+                "success": False,
+                "message": "Profile name is required",
+                "registered": [],
+                "unregistered": []
+            }), 400
         
-        result = sender.check_numbers(phone_numbers)
+        if not phone_numbers:
+            return jsonify({
+                "success": False,
+                "message": "Phone numbers are required",
+                "registered": [],
+                "unregistered": []
+            }), 400
+        
+        result = sender.check_numbers(profile_name, phone_numbers)
         return jsonify(result)
     
     except Exception as e:
