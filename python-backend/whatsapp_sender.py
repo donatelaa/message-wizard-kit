@@ -529,23 +529,20 @@ class WhatsAppSender:
             driver = webdriver.Chrome(options=options)
             driver.maximize_window()
             
-            # First load WhatsApp Web and wait for login
-            print("Loading WhatsApp Web...")
-            driver.get("https://web.whatsapp.com/")
-            
-            print("Waiting for WhatsApp Web login...")
-            self.wait_for_login(driver)
-            print("Login successful! Starting number check...")
-            time.sleep(3)
-            
-            # Now check each number
-            for phone in phone_numbers:
+            # Check each number by directly opening chat URL
+            for idx, phone in enumerate(phone_numbers):
                 try:
                     print(f"Checking {phone}...")
                     
                     # Navigate directly to the chat URL (same as send_message)
                     chat_url = f'https://web.whatsapp.com/send/?phone={phone}&text&type=phone_number&app_absent=0'
                     driver.get(chat_url)
+                    
+                    # Wait for login on first number
+                    if idx == 0:
+                        print("Waiting for WhatsApp Web login...")
+                        self.wait_for_login(driver)
+                        print("Login successful! Continuing checks...")
                     
                     # Wait for page to load
                     time.sleep(5)
